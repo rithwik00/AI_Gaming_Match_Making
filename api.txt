@@ -1,0 +1,120 @@
+Programmer's Reference
+Microsoft Match Game
+Your main function: calculate_move()
+The calculate_move() function is the equivalent of your main function. This is where you need to make your changes and from where you will control the game.
+
+The calculate_move() function
+
+Is called each time you need to submit a move to the game.
+Receives information about the game in a Python dictionary called gamestate.
+Must return a game move.
+Understanding The Gamestate
+The gamestate is where all of the game information is held. It is a Python dictionary. Examples of accessing data in the gamestate would be:
+
+gamestate["Board"][0]
+gamestate["UpturnedTiles"][0]["Tile"]
+Your calculate_move() function will be passed the current state of the game, the 'gamestate'. The gamestate is a python dictionary containing the following keys:
+
+Board - A list representing each tile in the game and whether that tile has been successfully matched or not. A "1" means the tile has been matched and "0" means the tile has not yet been matched.
+An example of the Board data could be 'Board':[0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+You could use the Board data to determine how many sets need to be matched by calling len(gamestate["Board"])
+You would access a specific item in the list using gamestate["Board"][7]. This would give you the 8th item in the list.
+UpturnedTiles - A list of dictionaries detailing the upturned tiles for this move.
+The upturned tiles will be the tiles you submitted as your previous move. If your previous move was Tiles: [1,10] then you will receive the image url for tile 1 and for tile 10 in the UpturnedTiles field.
+If there are upturned tiles, there will always be two upturned tiles.
+Each upturned tile states the Index of the tile, which is its unique location, and a URL to the image that is on the tile. It is this image that you need to analyse and match.
+An example of accessing an upturned tiles URL would be gamestate["UpturnedTiles"][0]["Tile"]
+An example of the UpturnedTiles data is
+'UpturnedTiles':[
+	{
+		'Index':1,
+		'Tile':'https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/1e4b92fd-e18c-4542-95c5-c5557d4eafb4.jpg'
+	},
+	{
+		'Index':10,
+		'Tile':'https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/4913c09d-2a30-4c0c-a445-fff318e25435.jpg'
+	}
+]
+						
+TileBacks - A list of strings containing the URLs of the images for the backs of the tiles.
+AnimalList - A list of strings that details all possible animals that will be displayed in the game.
+You can check to see if the name of an animal exists in the AnimalList using if "elephant" in gamestate["AnimalList"]:
+To identify that the tile image you have analysed is a picture of an animal, you can search through the tags returned from the Microsoft API to see if any of the tags contain an animal name in the AnimalList.
+CategoryList - A list of strings that details all possible categories that tiles will belong to in the game.
+Each tile belongs to one of the categories
+If you choose tiles that are in the same category, they have a much better chance of matching than if you choose any unmatched tile from any category.
+MyPoints - You current points score for this game.
+OppPoints - Your opponent's current points score for this game.
+OpponentMatches - The number of matched tile sets that your opponent has successfully identified.
+You can use this value to identify how quickly your opponent is matching tiles.
+Bonus - A String containing the name of a category. If your move matches tiles in this bonus category, the score received will be multiplied by the Multiplier amount.
+For example, this Bonus field might be set to "Landmarks". If you match a pair of Landmark tiles while the Bonus field is set to Landmarks, the score you receive for this move will be multiplied by the Multiplier field value
+If either you or your opponent match a pair that is in the bonus category, the bonus category will be randomly set to another category in the next move.
+Multiplier - The current score multipler that is affected by matching tiles that are in the Bonus Category.
+Consecutively matching tiles in the bonus category doubles the multiplier.
+Not matching tiles in the bonus category resets the multiplier.
+GameId - An integer representing the unique game id for the current game.
+You are unlikely to need the GameId for this game type
+OpponentId - A string containing the name of your opponent.
+You are unlikely to need the OpponentId for this game type
+ResponseDeadline - The epoch time, in milliseconds, that a successful move has to be sent and received by to prevent you from timing out.
+There is a time limit to how long you have to calculate your move. If you exceed this time limit your game will be terminated and your opponent will be awarded as the winner.
+It is unlikely that you will need to check this time as timeouts are set generously to allow you time to calculate your move, however, if you see yourself timing out a lot, you may need to limit yourself using this value.
+GameStatus - A string that will have value "RUNNING" if the game is in progress or a reason the game has ended therwise.
+You are unlikely to need the GameStatus for this game type
+IsMover - In this turn based game, this will always be true.
+MAKING A VALID MOVE
+The whole point of the calculate_move() function is for you to return the move you want to make in the game. In Match Game, a move is the set of tiles that you want to turn over to see if they match.
+
+You should determine which tile to turn over by remembering the tiles you have already seen and turning over the set of tiles that all have the same subject.
+
+To submit your move, you return a dictionary with the Key "Tiles" whose value is a list of the numbers of the tiles that you want to turn over. For example:
+
+return {"Tiles": [10, 14]}
+EXAMPLE GAMESTATE
+The following JSON is an example of a gamestate object that is part way through a game.
+
+{
+    "Board": [0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0],
+    "MyPoints": 4,
+    "OppPoints": 2,
+    "UpturnedTiles": [{
+        "Index": 1,
+        "Tile": "https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/1e4b92fd-e18c-4542-95c5-c5557d4eafb4.jpg"
+    }, {
+        "Index": 19,
+        "Tile": "https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/4913c09d-2a30-4c0c-a445-fff318e25435.jpg"
+    }],
+    "CategoryList": ["Words", "Landmarks", "Animals"],
+    "OpponentMatches": 2,
+    "TileBacks": [
+        "https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/ee3272f6-e12c-4ad1-a1ad-42b50e99ed8a.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/02b22f57-1e01-4c1b-9784-a94ab5468219.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/813c5578-3fbd-4d42-a285-754c5b567a90.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/813c5578-3fbd-4d42-a285-754c5b567a90.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/813c5578-3fbd-4d42-a285-754c5b567a90.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/813c5578-3fbd-4d42-a285-754c5b567a90.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/ee3272f6-e12c-4ad1-a1ad-42b50e99ed8a.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/02b22f57-1e01-4c1b-9784-a94ab5468219.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/ee3272f6-e12c-4ad1-a1ad-42b50e99ed8a.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/813c5578-3fbd-4d42-a285-754c5b567a90.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/ee3272f6-e12c-4ad1-a1ad-42b50e99ed8a.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/02b22f57-1e01-4c1b-9784-a94ab5468219.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/ee3272f6-e12c-4ad1-a1ad-42b50e99ed8a.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/813c5578-3fbd-4d42-a285-754c5b567a90.jpg", 
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/02b22f57-1e01-4c1b-9784-a94ab5468219.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/ee3272f6-e12c-4ad1-a1ad-42b50e99ed8a.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/02b22f57-1e01-4c1b-9784-a94ab5468219.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/ee3272f6-e12c-4ad1-a1ad-42b50e99ed8a.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/813c5578-3fbd-4d42-a285-754c5b567a90.jpg",
+	"https://aigaming.blob.core.windows.net/match-game/3685260b-721c-4b1c-b3c5-c030cd4e8080/ee3272f6-e12c-4ad1-a1ad-42b50e99ed8a.jpg"
+    ],
+    "IsMover": true,
+    "ResponseDeadline": 1542124987192,
+    "GameStatus": "RUNNING",
+    "AnimalList": ["cat", "dog", "horse", "lion", "turtle", "deer", "zebra", "rhinoceros", "fox", "cow", "chicken", "sheep", "antelope", "ape", "bear", "cheetah", "donkey", "eagle", "echidna", "elephant", "flamingo", "giraffe", "goat", "hawk", "heron", "hummingbird", "kangaroo", "koala", "leopard", "meerkat", "ostrich", "owl", "parrot", "penguin", "phasianid", "rodent", "salamander", "seal", "snake", "squirrel", "tiger", "vulture", "wolf"],
+    "Bonus": "Landmarks",
+    "Multiplier": 1,
+    "GameId": 2386873,
+    "OpponentId": "housebot-practise"
+}
